@@ -18,7 +18,7 @@ DATA_LIST_PATH = './data/cityscapes/val.lst'
 IGNORE_LABEL = 255
 NUM_CLASSES = 19
 NUM_STEPS = 500  # Number of images in the validation set.
-INPUT_SIZE = 832
+INPUT_SIZE = 800
 RESTORE_FROM = './deeplab_resnet.pth'
 
 
@@ -204,8 +204,8 @@ def val():
     else:
         input_size = (h, w)
     import libs.models as models
-    model = smp.Unet(
-                 encoder_name='timm-efficientnet-b0',
+    model = smp.FPN(
+                 encoder_name='timm-efficientnet-b3',
                  encoder_weights='imagenet',
                  in_channels=3,
                  classes=args.num_classes)

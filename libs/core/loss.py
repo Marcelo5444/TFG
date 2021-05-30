@@ -5,8 +5,8 @@ import torch.nn.functional as F
 
 
 class OhemCrossEntropy2dTensor(nn.Module):
-    def __init__(self, ignore_label, reduction='mean', thresh=0.6, min_kept=256,
-                 down_ratio=1, use_weight=False):
+    def __init__(self, ignore_label, reduction='elementwise_mean', thresh=0.6, min_kept=256,
+                 down_ratio=1, use_weight=True):
         super(OhemCrossEntropy2dTensor, self).__init__()
         self.ignore_label = ignore_label
         self.thresh = float(thresh)
@@ -25,9 +25,9 @@ class OhemCrossEntropy2dTensor(nn.Module):
                                                        ignore_index=ignore_label)
 
     def forward(self, pred, target):
+        #return self.criterion(pred, target)
         b, c, h, w = pred.size()
         target = target.view(-1)
-        #A boolean tensor that is True where input is not equal to other and False elsewhere torch.ne(input, other, *, out=None)
         valid_mask = target.ne(self.ignore_label)
         target = target * valid_mask.long()
         num_valid = valid_mask.sum()
@@ -38,7 +38,7 @@ class OhemCrossEntropy2dTensor(nn.Module):
         if self.min_kept > num_valid:
             print('Labels: {}'.format(num_valid))
         elif num_valid > 0:
-            prob = prob.masked_fill_(~valid_mask, 1)
+            prob = prob.masked_fill_(torch.logical_not(valid_mask), 1)
             mask_prob = prob[
                 target, torch.arange(len(target), dtype=torch.long)]
             threshold = self.thresh
@@ -51,7 +51,7 @@ class OhemCrossEntropy2dTensor(nn.Module):
                 target = target * kept_mask.long()
                 valid_mask = valid_mask * kept_mask
 
-        target = target.masked_fill_(~valid_mask, self.ignore_label)
+        target = target.masked_fill_(torch.logical_not(valid_mask), self.ignore_label)
         target = target.view(b, h, w)
 
         return self.criterion(pred, target)

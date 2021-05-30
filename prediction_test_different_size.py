@@ -84,10 +84,10 @@ def WholeTest(args, model, size=1.0):
             result = out.argmax(dim=1)[0]
             result = result.data.cpu().squeeze().numpy()
             row, col = result.shape
-            dst = np.ones((row, col), dtype=np.uint8) * 255
+            dst = np.ones((row, col,3), dtype=np.uint8) * 255
             for i in range(19):
-                dst[result == i] = color_list[i]
-            print(name, " done!")
+                dst[result == i] = color_map[i]
+            #print(name, " done!")
             save_name = os.path.join(out_dir, "/".join(name.split('/')[4:]))
             save_dir = "/".join(save_name.split("/")[:-1])
             if not os.path.exists(save_dir):
@@ -110,13 +110,13 @@ if __name__ == '__main__':
     parser.add_argument("--gpu",type=str,default="0",help="which gpu to use")
     parser.add_argument("--arch",type=str,default=None, help="which network are used")
     parser.add_argument("--size",type=float,default=1.0,help="ratio of the input images")
-    parser.add_argument("--rgb",type=int,default=0)
-    parser.add_argument("--cuda",type=int,default=0)
+    parser.add_argument("--rgb",type=int,default=1)
+    parser.add_argument("--cuda",type=int,default=1)
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
     test_list = makeTestlist(args.input_dir,args.start, args.end)
-    model= smp.Unet(
-                 encoder_name='timm-efficientnet-b0',
+    model= smp.FPN(
+                 encoder_name='timm-efficientnet-b3',
                  encoder_weights='imagenet',
                  in_channels=3,
                  classes=N_CLASS)
